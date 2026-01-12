@@ -1,0 +1,5 @@
+# Generated
+*__pycache__/
+
+# Builds & environments
+*.venv/

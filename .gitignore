@@ -1,0 +1,10 @@
+# IDEs & editors
+*.vscode/
+*.idea/
+
+# Operating System
+.DS_Store
+
+# Environment variables & secrets
+*.env
+*.secret
