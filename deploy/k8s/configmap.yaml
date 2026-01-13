@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: url-shortener-config
+data:
+  CASSANDRA_HOSTS: "cassandra"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  KEYSPACE: "url_shortener"
+  BASE_URL: "http://localhost"
