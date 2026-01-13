@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+    ports: ["8000:8000"]
+    depends_on:
+      - redis
+      - cassandra
+    env_file:
+      - .env
+
+  redis:
+    image: redis:7
+
+  cassandra:
+    image: cassandra:4.1
+    healthcheck:
+      test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
