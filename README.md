@@ -131,6 +131,6 @@ The application is configured using environment variables. A `.env` file is auto
   * `docker/`: Dockerfile and docker-compose.yml.
   * `k8s/`: Kubernetes manifests (ConfigMap, Deployments, Services).
 * `docs/`: Design documents and diagrams.
-* `scripts/`: Helper running scripts
+* `scripts/`: Helper running and deployment scripts.
   * `run.sh`: Helper script for Docker Compose execution.
   * `k8s_deploy.sh`: Helper script for Kubernetes deployment.
