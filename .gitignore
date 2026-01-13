@@ -8,3 +8,10 @@
 # Environment variables & secrets
 *.env
 *.secret
+
+# Generated
+*__pycache__/
+*.pyc
+
+# Builds & environments
+*.venv/
