@@ -31,7 +31,7 @@ def resolve_url(code: str):
         logger.warning("Code expired", extra={"code": code})
         return None
 
-    redis.setex(f"short:{code}", 3600, row.long_url)
+    redis.set(f"short:{code}", 3600, row.long_url)
     logger.info("Cache repopulated", extra={"code": code})
 
     return row.long_url
