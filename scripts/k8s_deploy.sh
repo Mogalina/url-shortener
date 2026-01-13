@@ -8,7 +8,7 @@ IMAGE_TAG="latest"
 FULL_IMAGE_NAME="$APP_NAME:$IMAGE_TAG"
 K8S_DIR="./deploy/k8s"
 
-echo "Starting Kubernetes Deployment for $APP_NAME..."
+echo "==> Starting Kubernetes Deployment for $APP_NAME..."
 
 # Prerequisite checks
 if ! command -v kubectl &> /dev/null; then
@@ -28,24 +28,24 @@ docker build -t $FULL_IMAGE_NAME -f deploy/docker/Dockerfile .
 
 # Load Image into local cluster
 if command -v minikube &> /dev/null && minikube status | grep -q "Running"; then
-    echo "==> Detected Minikube. Loading image..."
+    echo "Detected Minikube. Loading image..."
     minikube image load $FULL_IMAGE_NAME
 elif command -v kind &> /dev/null && kind get clusters | grep -q "kind"; then
-    echo "==> Detected Kind. Loading image..."
+    echo "Detected Kind. Loading image..."
     kind load docker-image $FULL_IMAGE_NAME
 else
-    echo "   No local Minikube or Kind cluster detected active."
-    echo "   Ensure your Kubernetes cluster can pull '$FULL_IMAGE_NAME'."
-    echo "   If using Docker Desktop, the local image is already available."
+    echo "No local Minikube or Kind cluster detected active."
+    echo "Ensure your Kubernetes cluster can pull '$FULL_IMAGE_NAME'."
+    echo "If using Docker Desktop, the local image is already available."
 fi
 
 # Apply Kubernetes configurations
 if [ -d "$K8S_DIR" ]; then
-    echo "fyp  Applying configurations from $K8S_DIR..."
+    echo "==> Applying configurations from $K8S_DIR..."
     kubectl apply -f $K8S_DIR
 else
-    echo "   Error: Directory $K8S_DIR not found."
-    echo "   Please save the YAML files from the previous step into 'deploy/k8s/'."
+    echo "Error: Directory $K8S_DIR not found."
+    echo "Please save the YAML files from the previous step into 'deploy/k8s/'."
     exit 1
 fi
 
@@ -58,9 +58,8 @@ kubectl rollout status statefulset/cassandra --timeout=120s
 # Port forwarding
 echo ""
 echo "Deployment complete!"
-echo "   The service is running inside the cluster."
-echo "   Opening port forward to localhost:8000..."
-echo "   (Press Ctrl+C to stop)"
+echo "The service is running inside the cluster."
+echo "Opening port forward to localhost:8000..."
 echo ""
 
 # Forward port 8000 from the 'api' service to localhost
