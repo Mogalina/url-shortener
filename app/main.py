@@ -10,7 +10,7 @@ logger = logging.getLogger("api")
 app = FastAPI(title="URL Shortener", version="1.0.0")
 
 @app.middleware("http")
-async def logging_and_rate_limit(request: Request, call_next):
+async def request_rate_limit(request: Request, call_next):
     logger.info("Incoming request", extra={
         "method": request.method,
         "path": request.url.path
