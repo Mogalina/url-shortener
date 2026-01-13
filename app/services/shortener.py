@@ -23,7 +23,7 @@ def create_short_url(long_url: str, ttl_days: int):
 
     logger.info("Saved URL in Cassandra", extra={"code": code})
 
-    redis.set(f"short:{code}", ttl_days * 86400, long_url)
+    redis.set(f"short:{code}", long_url, ex=ttl_days * 86400)
     logger.info("Cached URL in Redis", extra={"code": code})
 
     return code
