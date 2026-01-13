@@ -28,4 +28,8 @@ CREATE TABLE IF NOT EXISTS urls (
 )
 """)
 
+session.execute("""
+CREATE INDEX IF NOT EXISTS idx_expires_at ON urls (expires_at);
+""")
+
 logger.info("Cassandra schema ensured")

@@ -18,9 +18,9 @@ def resolve_url(code: str):
     row = session.execute(
         """SELECT long_url, expires_at 
         FROM urls 
-        WHERE short_code=%s
+        WHERE short_code = %s
         """,
-        (code)
+        (code,)
     ).one()
 
     if not row:

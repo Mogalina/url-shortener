@@ -12,6 +12,17 @@ services:
     env_file:
       - .env
 
+  cleanup:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+    command: python -m app.services.cleanup
+    depends_on:
+      - redis
+      - cassandra
+    env_file:
+      - .env
+
   redis:
     image: redis:7
 
