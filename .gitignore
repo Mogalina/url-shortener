@@ -12,6 +12,12 @@
 # Generated
 *__pycache__/
 *.pyc
+*.rdb
 
 # Builds & environments
 *.venv/
+
+# Logs
+*.log
+*log/
+*logs/

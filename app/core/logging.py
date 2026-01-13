@@ -4,7 +4,7 @@ import os
 from logging.handlers import RotatingFileHandler
 
 LOG_DIR = "log"
-LOG_FILE = os.path.join(LOG_DIR, "logs.txt")
+LOG_FILE = os.path.join(LOG_DIR, "logs.log")
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
