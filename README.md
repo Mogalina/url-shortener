@@ -272,7 +272,7 @@ This comparison estimates the cost (***registered on 14 January 2026***) of runn
 
 * 1-year commitment: **30–40% savings**
 * Example:
-  * AWS `t3.large`: ~$60/mo → **~$36/mo per node**
+  * AWS `t3.large`: ~$60/mo reduced to **~$36/mo per node**
 
 #### Spot Instances
 
