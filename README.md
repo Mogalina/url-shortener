@@ -50,7 +50,7 @@ To calculate the storage per URL, we estimate the raw data plus the overhead Cas
 
 ### **Storage Capacity Planning**
 
-*Assumptions: 1 Million new URLs/day, RF=3. We assume ~50% compression ratio using Cassandra's default LZ4 algorithm.*
+*Assumptions: 1 Million new URLs/day (roughly 11 new URLs/second), RF=3. We assume ~50% compression ratio using Cassandra's default LZ4 algorithm.*
 
 | Time Period | New URLs    | Raw Data Size (1 Node) | Total Disk Usage (RF=3, Uncompressed) | **Total Disk (RF=3, LZ4 Compressed)** |
 | :---------- | :---------- | :--------------------- | :------------------------------------ | :------------------------------------ |
@@ -159,6 +159,144 @@ The application is configured using environment variables. A `.env` file is auto
 | `REDIS_PORT`      | Port for Redis                       | `6379`                  |
 | `BASE_URL`        | Public base URL for generated links  | `http://localhost:8000` |
 | `KEYSPACE`        | Cassandra keyspace name              | `url_shortener`         |
+
+## Cost Estimation: Self-Hosted (IaaS)
+
+This comparison estimates the cost (***registered on 14 January 2026***) of running the following infrastructure on **AWS, GCP, and Azure**:
+
+* **3-node Cassandra cluster**
+* **2 API servers**
+* **1 Redis node**
+* **1 Load Balancer**
+
+### Workload Assumptions
+
+* **Region:** US East (N. Virginia / East US)
+* **Database:** 3 Nodes (Cassandra, RF = 3), ~8GB RAM each
+* **Application:** 2 Nodes (Stateless API), ~4GB RAM each
+* **Cache:** 1 Node (Redis), ~2GB RAM
+* **Storage:**  
+  * 100GB SSD per DB node (300GB total)  
+  * Boot disks included
+* **Network:** 1 TB outbound traffic per month
+
+### Executive Summary
+
+| Provider  | Daily Cost | Monthly Cost | Yearly Cost |
+|-----------|------------|--------------|-------------|
+| **AWS**   | ~$13.13    | ~$394        | ~$4,728     |
+| **GCP**   | ~$13.33    | ~$400        | ~$4,800     |
+| **Azure** | ~$16.20    | ~$486        | ~$5,832     |
+
+#### Summary
+
+* **AWS** is the most cost-effective option for this setup, mainly due to:
+  * Aggressive **gp3 storage pricing**
+  * Low-cost **t3 burstable instances**
+* **GCP** is a close second:
+  * **e2 instances** provide predictable, sustained performance
+* **Azure** is more expensive:
+  * Uses **D-series enterprise-grade VMs** for databases
+  * Costs can be reduced with burstable B-series, but with performance tradeoffs
+
+### Detailed Breakdown
+
+#### AWS (Amazon Web Services)
+
+**Region:** `us-east-1` (N. Virginia)
+
+| Resource           | Type / Spec                 | Unit Price       | Monthly |
+|--------------------|-----------------------------|------------------|---------|
+| DB Compute (x3)    | t3.large (2 vCPU, 8GB RAM)  | $0.0832/hr       | $182.22 |
+| App Compute (x2)   | t3.medium (2 vCPU, 4GB RAM) | $0.0416/hr       | $60.74  |
+| Redis Compute (x1) | t3.small (2 vCPU, 2GB RAM)  | $0.0208/hr       | $15.19  |
+| DB Storage         | EBS gp3 (300GB)             | $0.08/GB         | $24.00  |
+| Boot Storage       | EBS gp3 (120GB)             | $0.08/GB         | $9.60   |
+| Load Balancer      | Application Load Balancer   | $0.0225/hr + LCU | ~$21.43 |
+| Network            | Data Transfer Out (1 TB)    | $0.09/GB         | $81.00  |
+
+**Total:** **~$394.18 / month**
+
+> **Note:**  
+> t3 instances are burstable. If DB CPU usage is constantly high, you may incur unlimited-mode charges.  
+> For consistent performance, upgrade DB nodes to `m6i.large` (~$0.096/hr).
+
+---
+
+#### GCP (Google Cloud Platform)
+
+**Region:** `us-central1` (Iowa)
+
+| Resource           | Type / Spec                        | Unit Price | Monthly |
+|--------------------|------------------------------------|------------|---------|
+| DB Compute (x3)    | e2-standard-2 (2 vCPU, 8GB RAM)    | $0.067/hr  | $146.76 |
+| App Compute (x2)   | e2-medium (2 vCPU, 4GB RAM)        | $0.0335/hr | $50.00  |
+| Redis Compute (x1) | e2-small (2 vCPU, 2GB RAM)         | $0.019/hr  | $14.00  |
+| DB Storage         | Balanced Persistent Disk (300GB)   | $0.10/GB   | $30.00  |
+| Boot Storage       | Balanced Persistent Disk (120GB)   | $0.10/GB   | $12.00  |
+| Load Balancer      | Cloud Load Balancing               | $0.025/hr  | ~$26.25 |
+| Network            | Premium Tier Egress (1 TB)         | $0.12/GB   | $120.00 |
+
+**Total:** **~$399.01 / month**
+
+> **Note:**  
+> GCP e2 instances offer predictable performance without CPU credit models, making cost behavior easier to reason about.
+
+---
+
+#### Microsoft Azure
+
+**Region:** `east-us`
+
+| Resource           | Type / Spec                     | Unit Price        | Monthly |
+|--------------------|---------------------------------|-------------------|---------|
+| DB Compute (x3)    | D2s v5 (2 vCPU, 8GB RAM)        | $0.096/hr         | $210.24 |
+| App Compute (x2)   | B2s (2 vCPU, 4GB RAM)           | $0.0496/hr        | $72.42  |
+| Redis Compute (x1) | B1ms (1 vCPU, 2GB RAM)          | $0.0207/hr        | $15.11  |
+| DB Storage         | Managed Disk P10 (128GB × 3)    | $17.92/disk       | $53.76  |
+| Boot Storage       | Standard SSD E4 (32GB × 6)      | ~$2.40/disk       | $14.40  |
+| Load Balancer      | Standard Load Balancer          | $0.025/hr         | ~$28.00 |
+| Network            | Data Transfer Out (1 TB)        | $0.0875/GB        | $87.50  |
+
+**Total:** **~$481.43 / month**
+
+> **Note:**  
+> D2s v5 was selected for database stability.  
+> Switching DB nodes to `B2ms` could save ~$60/month but risks latency spikes during heavy writes.
+
+---
+
+### Savings Opportunities (All Clouds)
+
+#### Reserved Instances (1-Year / 3-Year)
+
+* 1-year commitment: **30–40% savings**
+* Example:
+  * AWS `t3.large`: ~$60/mo → **~$36/mo per node**
+
+#### Spot Instances
+
+* **Do NOT use for databases**
+* Safe for:
+  * API servers
+  * Cleanup workers
+* Savings: **60–80%**
+* Requires interruption handling
+
+#### Managed Services
+
+Instead of self-hosting:
+
+* Cassandra → **Amazon Keyspaces**
+* Redis → **AWS ElastiCache / GCP Memorystore**
+
+While unit pricing is higher, you often save significantly on:
+
+* Maintenance
+* Upgrades
+* On-call engineering time
+
+> **Operational cost is usually higher than infrastructure cost in production systems.**
 
 ## Project Structure
 
