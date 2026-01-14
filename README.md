@@ -9,7 +9,7 @@ A high-performance, scalable URL shortening API built with Python and FastAPI. T
 * **Redirection**: Fast redirection to original URLs using HTTP 307.
 * **Caching**: High-speed lookups using Redis to minimize database hits.
 * **Rate Limiting**: Built-in protection against abuse (limit: 10 requests per minute per IP).
-* **Cleanup Service**: Background worker that automatically removes expired URLs.
+* **Cleanup Service**: Native Cassandra service that automatically removes expired URLs based on TTL.
 * **End-to-End Load Balancing**: Implements load balancing at the reverse proxy, cache, and database layers.
 * **Scalable Architecture**: Stateless API design suitable for horizontal scaling.
 * **Containerization**: Fully Dockerized with Docker Compose support.
@@ -104,7 +104,7 @@ To deploy the application to a Kubernetes cluster, use the deployment script.
     This script performs the following:
     * Builds the Docker image locally.
     * Loads the image into your cluster (Minikube/Kind).
-    * Applies all configuration manifests (ConfigMap, Redis, Cassandra, API, Cleanup).
+    * Applies all configuration manifests (ConfigMap, Redis, Cassandra, API).
     * Sets up port forwarding to `localhost:8000`.
 
 ## API Usage
@@ -279,7 +279,6 @@ This comparison estimates the cost (***officially registered on 14 January 2026*
 * **Do NOT use for databases**
 * Safe for:
   * API servers
-  * Cleanup workers
 * Savings: **60–80%**
 * Requires interruption handling
 
@@ -304,7 +303,7 @@ While unit pricing is higher, you often save significantly on:
   * `api/`: API route definitions and endpoints.
   * `core/`: Configuration, logging, and security (rate limiting).
   * `db/`: Database connection modules (Redis, Cassandra).
-  * `services/`: Business logic (shortener, resolver, cleanup).
+  * `services/`: Business logic (shortener, resolver).
   * `utils/`: Utility functions (ID generation, time).
 * `deploy/`: Deployment configurations.
   * `docker/`: Dockerfile, docker-compose.yml, and nginx.conf.
