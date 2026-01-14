@@ -10,6 +10,7 @@ A high-performance, scalable URL shortening API built with Python and FastAPI. T
 * **Caching**: High-speed lookups using Redis to minimize database hits.
 * **Rate Limiting**: Built-in protection against abuse (limit: 10 requests per minute per IP).
 * **Cleanup Service**: Background worker that automatically removes expired URLs.
+* **End-to-End Load Balancing**: Implements load balancing at the reverse proxy, cache, and database layers.
 * **Scalable Architecture**: Stateless API design suitable for horizontal scaling.
 * **Containerization**: Fully Dockerized with Docker Compose support.
 * **Kubernetes Ready**: Includes manifests for deployment to K8s clusters.
@@ -20,8 +21,17 @@ A high-performance, scalable URL shortening API built with Python and FastAPI. T
 * **Framework**: FastAPI
 * **Database**: Apache Cassandra (4.1)
 * **Cache**: Redis (7.0)
+* **Load Balancer**: Nginx
 * **Server**: Uvicorn
 * **Containerization**: Docker, Docker Compose
+
+## Load Balancing Strategy
+
+The service implements a three-tier load balancing strategy to ensure high availability and performance:
+
+1. **Client to Application (Nginx)**: An Nginx reverse proxy sits in front of the application, distributing incoming HTTP requests across multiple stateless API containers using a round-robin approach.
+2. **Application to Cache (Redis Cluster)**: The application automatically detects if multiple Redis hosts are configured and switches to a Redis Cluster client, distributing cache keys across nodes to prevent hot spots.
+3. **Application to Database (Cassandra)**: The Cassandra driver utilizes `TokenAwarePolicy`, allowing the application to send queries directly to the specific database nodes responsible for the data, reducing latency and coordinator overhead.
 
 ## Prerequisites
 
@@ -111,13 +121,13 @@ HTTP 307 Temporary Redirect to the original URL.
 
 The application is configured using environment variables. A `.env` file is automatically created from `.env.example` when using `run.sh`.
 
-| Variable          | Description                         | Default (Docker)        |
-| :---------------- | :---------------------------------- | :---------------------- |
-| `CASSANDRA_HOSTS` | Hostname of the Cassandra service   | `cassandra`             |
-| `REDIS_HOST`      | Hostname of the Redis service       | `redis`                 |
-| `REDIS_PORT`      | Port for Redis                      | `6379`                  |
-| `BASE_URL`        | Public base URL for generated links | `http://localhost:8000` |
-| `KEYSPACE`        | Cassandra keyspace name             | `url_shortener`         |
+| Variable          | Description                          | Default (Docker)        |
+| :---------------- | :----------------------------------- | :---------------------- |
+| `CASSANDRA_HOSTS` | Hostname(s) of the Cassandra service | `cassandra`             |
+| `REDIS_HOST`      | Hostname(s) of the Redis service     | `redis`                 |
+| `REDIS_PORT`      | Port for Redis                       | `6379`                  |
+| `BASE_URL`        | Public base URL for generated links  | `http://localhost:8000` |
+| `KEYSPACE`        | Cassandra keyspace name              | `url_shortener`         |
 
 ## Project Structure
 
@@ -128,7 +138,7 @@ The application is configured using environment variables. A `.env` file is auto
   * `services/`: Business logic (shortener, resolver, cleanup).
   * `utils/`: Utility functions (ID generation, time).
 * `deploy/`: Deployment configurations.
-  * `docker/`: Dockerfile and docker-compose.yml.
+  * `docker/`: Dockerfile, docker-compose.yml, and nginx.conf.
   * `k8s/`: Kubernetes manifests (ConfigMap, Deployments, Services).
 * `docs/`: Design documents and diagrams.
 * `scripts/`: Helper running and deployment scripts.
