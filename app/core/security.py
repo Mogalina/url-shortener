@@ -12,9 +12,12 @@ def rate_limit(request: Request):
     key = f"rl:{client_ip}"
 
     try:
-        current = redis.incr(key)
-        if current == 1:
-            redis.expire(key, WINDOW_SECONDS)
+        pipe = redis.pipeline()
+        pipe.incr(key)
+        pipe.expire(key, WINDOW_SECONDS, nx=True) 
+        result = pipe.execute()
+        
+        current = result[0]
 
         if current > RATE_LIMIT:
             logger.warning("Rate limit exceeded", extra={
