@@ -4,10 +4,12 @@ from app.core.config import settings
 
 logger = logging.getLogger("cassandra")
 
-cluster = Cluster([settings.CASSANDRA_HOSTS])
+hosts = [h.strip() for h in settings.CASSANDRA_HOSTS.split(",")]
+
+cluster = Cluster(hosts)
 session = cluster.connect()
 
-logger.info("Connected to Cassandra cluster")
+logger.info(f"Connected to Cassandra cluster at {hosts}")
 
 session.execute(f"""
 CREATE KEYSPACE IF NOT EXISTS {settings.KEYSPACE}
