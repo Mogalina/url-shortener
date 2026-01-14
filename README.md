@@ -162,7 +162,7 @@ The application is configured using environment variables. A `.env` file is auto
 
 ## Cost Estimation: Self-Hosted (IaaS)
 
-This comparison estimates the cost (***registered on 14 January 2026***) of running the following infrastructure on **AWS, GCP, and Azure**:
+This comparison estimates the cost (***officially registered on 14 January 2026***) of running the following infrastructure on **AWS, GCP, and Azure**:
 
 * **3-node Cassandra cluster**
 * **2 API servers**
