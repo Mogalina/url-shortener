@@ -33,6 +33,37 @@ The service implements a three-tier load balancing strategy to ensure high avail
 2. **Application to Cache (Redis Cluster)**: The application automatically detects if multiple Redis hosts are configured and switches to a Redis Cluster client, distributing cache keys across nodes to prevent hot spots.
 3. **Application to Database (Cassandra)**: The Cassandra driver utilizes `TokenAwarePolicy`, allowing the application to send queries directly to the specific database nodes responsible for the data, reducing latency and coordinator overhead.
 
+## Resource Estimation
+
+Estimations are based on the 8-character Base62 encoding, the schema defined in `app/db/cassandra.py`, and a **Replication Factor (RF) of 3**.
+
+### **Row Size Breakdown**
+
+To calculate the storage per URL, we estimate the raw data plus the overhead Cassandra adds for metadata (timestamps, column mapping) and the secondary index on `expires_at`.
+
+* **Partition Key (`short_code`)**: 8 bytes
+* **Long URL (`long_url`)**: ~500 bytes (Average estimate)
+* **Timestamps (`created_at`, `expires_at`)**: 16 bytes (8 bytes each)
+* **Cassandra Metadata & Overhead**: ~126 bytes
+  * *Includes: Per-column timestamps (writetime), column length markers, and the `idx_expires_at` secondary index entry.*
+* **Total Size per Row**: **~650 bytes**
+
+### **Storage Capacity Planning**
+
+*Assumptions: 1 Million new URLs/day, RF=3. We assume ~50% compression ratio using Cassandra's default LZ4 algorithm.*
+
+| Time Period | New URLs    | Raw Data Size (1 Node) | Total Disk Usage (RF=3, Uncompressed) | **Total Disk (RF=3, LZ4 Compressed)** |
+| :---------- | :---------- | :--------------------- | :------------------------------------ | :------------------------------------ |
+| **1 Day**   | 1 Million   | 650 MB                 | 1.95 GB                               | **~0.98 GB**                          |
+| **1 Month** | 30 Million  | 19.5 GB                | 58.5 GB                               | **~29.3 GB**                          |
+| **1 Year**  | 365 Million | 237 GB                 | 711 GB                                | **~355.5 GB**                         |
+| **5 Years** | 1.8 Billion | 1.18 TB                | 3.54 TB                               | **~1.77 TB**                          |
+
+### **ID Namespace Capacity**
+
+* **Unique Short Codes**: 62^8 ≈ **218 Trillion** (2.18 × 10^14) combinations.
+* **Lifespan**: At a rate of 1 million new URLs/day, the 8-character namespace will last effectively forever (hundreds of thousands of years) without collisions.
+
 ## Prerequisites
 
 * Docker and Docker Compose

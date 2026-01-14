@@ -4,3 +4,4 @@ redis
 cassandra-driver
 pydantic-settings
 python-dotenv
+lz4

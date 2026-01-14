@@ -6,7 +6,7 @@ logger = logging.getLogger("cassandra")
 
 hosts = [h.strip() for h in settings.CASSANDRA_HOSTS.split(",")]
 
-cluster = Cluster(hosts)
+cluster = Cluster(hosts, compression=True)
 session = cluster.connect()
 
 logger.info(f"Connected to Cassandra cluster at {hosts}")
