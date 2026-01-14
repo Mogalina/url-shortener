@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     REDIS_PORT: int
     BASE_URL: str
     KEYSPACE: str
+    CACHE_TTL_SECONDS: int = 3600
 
     class Config:
         env_file = ".env"

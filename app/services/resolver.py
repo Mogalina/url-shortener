@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from app.db.cassandra import session
 from app.db.redis import redis
+from app.core.config import settings
 
 logger = logging.getLogger("service.resolver")
 
@@ -31,7 +32,7 @@ def resolve_url(code: str):
         logger.warning("Code expired", extra={"code": code})
         return None
 
-    redis.set(f"short:{code}", row.long_url, ex=3600)
+    redis.set(f"short:{code}", row.long_url, ex=settings.CACHE_TTL_SECONDS)
     logger.info("Cache repopulated", extra={"code": code})
 
     return row.long_url
